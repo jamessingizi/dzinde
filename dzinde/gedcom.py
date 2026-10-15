@@ -1,4 +1,5 @@
 """GEDCOM 5.5.1 import and export (with tolerance for 5.5, 7.0 and common vendor tags)."""
+import html
 import os
 import re
 from datetime import date
@@ -807,7 +808,7 @@ class Exporter:
             return
         self.w(0, 'SOUR', xref=f'@S{sid}@')
         fields = m.xml_to_fields(s['Fields'])
-        self.w(1, 'TITL', m.strip_tags(m.render_source_text(self.con, s, None, 'Bibliography')) or s['Name'])
+        self.w(1, 'TITL', m.strip_tags(html.unescape(m.render_source_text(self.con, s, None, 'Bibliography'))) or s['Name'])
         self.w(1, 'ABBR', s['Name'])
         if fields.get('Author'):
             self.w(1, 'AUTH', templates_name(fields['Author']))
@@ -818,9 +819,9 @@ class Exporter:
         if s['RefNumber']:
             self.w(1, 'REFN', s['RefNumber'])
         if self.o['extraTags']:
-            self.w(1, '_FOOT', m.render_source_text(self.con, s, None, 'Footnote'))
-            self.w(1, '_SHORT', m.render_source_text(self.con, s, None, 'ShortFootnote'))
-            self.w(1, '_BIBL', m.render_source_text(self.con, s, None, 'Bibliography'))
+            self.w(1, '_FOOT', html.unescape(m.render_source_text(self.con, s, None, 'Footnote')))
+            self.w(1, '_SHORT', html.unescape(m.render_source_text(self.con, s, None, 'ShortFootnote')))
+            self.w(1, '_BIBL', html.unescape(m.render_source_text(self.con, s, None, 'Bibliography')))
             if s['TemplateID']:
                 t = row(self.con, 'SELECT Name FROM SourceTemplateTable WHERE TemplateID=?', s['TemplateID'])
                 self.w(1, '_TMPLT')

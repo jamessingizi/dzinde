@@ -1,4 +1,5 @@
 """GEDCOM round-trip checks. Run: python3 tests/test_gedcom.py"""
+import html
 import os
 import sys
 import tempfile
@@ -70,6 +71,17 @@ def test_privatize():
     text = gedcom.export(con, options={'privatizeLiving': True})
     block = text.split(f'0 @I{grace}@ INDI')[1].split('\n0 ')[0]
     assert 'Living /Hartwell/' in block and 'BIRT' not in block
+
+
+def test_untrusted_source_text_is_escaped():
+    con = db.create(os.path.join(tempfile.mkdtemp(), 'x.rmtree'))
+    evil = '<img src=x onerror=alert(1)><i>Parish Register</i> & co<script>x()</script>'
+    gedcom.import_text(con, f'0 HEAD\n1 CHAR UTF-8\n0 @S1@ SOUR\n1 TITL T\n1 _FOOT {evil}\n0 TRLR\n')
+    src = m.row(con, 'SELECT * FROM SourceTable')
+    out = m.render_source_text(con, src, None, 'Footnote')
+    assert '<img' not in out and '<script' not in out and '<i>Parish Register</i>' in out and '&amp; co' in out, out
+    assert html.unescape(out).rstrip('.') == evil  # what GEDCOM export writes: the original text, no entity build-up
+    assert m.safe_url('javascript:alert(1)') == '#' and m.safe_url('HTTPS://x.org') == 'HTTPS://x.org'
 
 
 if __name__ == '__main__':

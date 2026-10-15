@@ -1,5 +1,5 @@
 // Edit Person / Add Person / Edit Family / citations / media / tasks / witnesses.
-import { GET, POST, PUT, DEL, h, clear, modal, toast, fail, confirmBox, select, checkbox, field, dateInput, placeInput, choosePerson, chooseFile, personLine, lifeOf, readFileAs, debounce, invalidatePlaces, promptBox, put, fill } from './ui.js';
+import { GET, POST, PUT, DEL, h, clear, modal, toast, fail, confirmBox, select, checkbox, field, dateInput, placeInput, choosePerson, chooseFile, personLine, lifeOf, readFileAs, debounce, invalidatePlaces, promptBox, put, fill, safeUrl } from './ui.js';
 import { S, emit, setPerson, goPerson } from './app.js';
 
 const changed = () => emit('changed');
@@ -569,7 +569,7 @@ export function tasksPanel(el, ownerType, ownerId) {
 export function webtagsPanel(el, ownerType, ownerId) {
   async function load() {
     const tags = await GET(`/api/list/webtags?OwnerType=${ownerType}&OwnerID=${ownerId}`);
-    fill(el, h('div.list', tags.length ? tags.map(t => h('div', h('a', { href: t.URL, target: '_blank', rel: 'noopener noreferrer' }, t.Name || t.URL), h('span.muted.small', t.URL),
+    fill(el, h('div.list', tags.length ? tags.map(t => h('div', h('a', { href: safeUrl(t.URL), target: '_blank', rel: 'noopener noreferrer' }, t.Name || t.URL), h('span.muted.small', t.URL),
       h('button.btn.sm.right', { onclick: () => edit(t) }, 'Edit'))) : h('div.muted', 'No WebTags')),
     h('button.btn.sm', { style: { marginTop: '6px' }, onclick: () => edit({}) }, '+ Add WebTag'));
   }

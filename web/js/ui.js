@@ -271,6 +271,8 @@ export function choosePerson({ title = 'Select person', allowNew = false, exclud
 // ---------------------------------------------------------------- local file browser
 // Desktop build (pywebview): native dialogs, file saving and windows. Undefined in a normal browser.
 export const desktop = () => window.pywebview?.api;
+// Only web links are clickable; javascript:/data: URLs from imported data are not.
+export const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '#';
 
 export function chooseFile({ title = 'Choose file', ext = '', dir = '', folder = false, save = false, defaultName = '' } = {}) {
   if (desktop()) return desktop().choose({ title, ext, dir, folder, save, defaultName });

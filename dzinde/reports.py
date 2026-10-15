@@ -1259,7 +1259,7 @@ def r_webtags(ctx):
     data = []
     for u in rows(ctx.con, 'SELECT * FROM URLTable ORDER BY Name'):
         owner = m.citation_owner_label(ctx.con, u['OwnerType'], u['OwnerID']) or _owner_misc(ctx.con, u['OwnerType'], u['OwnerID'])
-        data.append([E(owner), E(u['Name'] or ''), f'<a href="{E(u["URL"] or "")}">{E(u["URL"] or "")}</a>'])
+        data.append([E(owner), E(u['Name'] or ''), f'<a href="{E(m.safe_url(u["URL"]))}">{E(u["URL"] or "")}</a>'])
     return _table(['Owner', 'Name', 'URL'], data)
 
 

@@ -1,5 +1,5 @@
 // List pages (Places, Sources, Media, Tasks, Addresses/Repositories) and list managers.
-import { GET, POST, PUT, DEL, h, clear, modal, toast, fail, confirmBox, promptBox, dataTable, select, checkbox, field, dateInput, chooseFile, personLine, debounce, invalidatePlaces, readFileAs, put, fill } from './ui.js';
+import { GET, POST, PUT, DEL, h, clear, modal, toast, fail, confirmBox, promptBox, dataTable, select, checkbox, field, dateInput, chooseFile, personLine, debounce, invalidatePlaces, readFileAs, put, fill, safeUrl } from './ui.js';
 import { S, emit, goPerson } from './app.js';
 import { citationsPanel, mediaPanel, webtagsPanel, noteEditor } from './edit.js';
 
@@ -193,7 +193,7 @@ export async function editMedia(mid, linkId) {
   const typ = select(Object.entries(S.meta.mediaTypes), m.MediaType);
   const path = h('input', { value: (m.MediaPath || '') + (m.MediaFile || ''), style: { width: '100%' } });
   const prev = m.MediaType === 1 ? h('img', { src: `/api/media/${mid}/file`, style: { maxWidth: '100%', maxHeight: '320px', display: 'block', margin: '0 auto 10px' } })
-    : h('p', h('a', { href: m.URL || `/api/media/${mid}/file`, target: '_blank' }, 'Open file'));
+    : h('p', h('a', { href: m.URL ? safeUrl(m.URL) : `/api/media/${mid}/file`, target: '_blank' }, 'Open file'));
   const tags = h('div.list', m.tags.length ? m.tags.map(t => h('div', t.isPrimary ? '★ ' : '', t.label || `owner ${t.ownerType}:${t.ownerId}`,
     t.ownerType === 0 ? h('button.btn.sm', { onclick: () => goPerson(t.ownerId) }, 'Go') : '',
     t.ownerType === 0 ? h('button.btn.sm', { onclick: async () => { await POST('/api/mediaLink', { LinkID: t.linkId, IsPrimary: 1 }); toast('Primary photo set'); } }, 'Make primary') : '',

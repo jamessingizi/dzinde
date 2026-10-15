@@ -741,6 +741,11 @@ def render_citation(con, citation_id, which='Footnote'):
 
 
 def render_source_text(con, src, cit, which='Footnote'):
+    """Footnote/ShortFootnote/Bibliography as safe HTML (field values are untrusted)."""
+    return safe_html(_source_text(con, src, cit, which))
+
+
+def _source_text(con, src, cit, which):
     fields = xml_to_fields(src.get('Fields'))
     if cit:
         fields.update(xml_to_fields(cit.get('Fields')))
@@ -917,13 +922,20 @@ def person_groups(con, pid):
 
 
 # ------------------------------------------------------------------ notes (RM stores lightly formatted text)
+def safe_html(s):
+    """Escape everything except RM's inline formatting tags (<b>,<i>,<u>,<sup>,<sub>, no attributes).
+    Notes and source text come from imported GEDCOMs, i.e. other people, and are shown as HTML."""
+    return re.sub(r'&lt;(/?)(b|i|u|sup|sub)&gt;', r'<\1\2>', escape(s or '', quote=False), flags=re.I)
+
+
+def safe_url(u):
+    """Only web links are clickable; javascript:/data: URLs from imported data become '#'."""
+    return u if re.match(r'(?i)https?://', u or '') else '#'
+
+
 def note_to_html(note):
     """RM notes allow <b>,<i>,<u>; everything else escaped. Newlines -> <br>."""
-    if not note:
-        return ''
-    out = escape(note)
-    out = re.sub(r'&lt;(/?)(b|i|u|sup|sub)&gt;', r'<\1\2>', out)
-    return out.replace('\r\n', '\n').replace('\n', '<br>')
+    return safe_html(note).replace('\r\n', '\n').replace('\n', '<br>')
 
 
 def strip_tags(s):
