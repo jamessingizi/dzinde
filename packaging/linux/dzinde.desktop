@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Dzinde
+Comment=Genealogy (RootsMagic-compatible)
+Exec=Dzinde %f
+Icon=dzinde
+Categories=Office;
+Terminal=false

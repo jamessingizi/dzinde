@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dzinde</title>
+<link rel="stylesheet" href="/css/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3v26M16 12l-8-5M16 12l8-5M16 20l-9-4M16 20l9-4' stroke='%232f6f4f' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<div id="app">
+  <nav id="rail" aria-label="Main"></nav>
+  <main id="main">
+    <header id="topbar">
+      <div class="tb-left">
+        <button class="icon-btn" id="btnBack" title="Back (Ctrl+Shift+←)" aria-label="Back"></button>
+        <button class="icon-btn" id="btnFwd" title="Forward (Ctrl+Shift+→)" aria-label="Forward"></button>
+        <h1 id="pageTitle">Dzinde</h1>
+      </div>
+      <div class="tb-mid">
+        <input id="quickSearch" type="search" placeholder="Find person… (Ctrl+S)" autocomplete="off" aria-label="Find person">
+        <div id="quickResults" class="popup hidden"></div>
+      </div>
+      <div class="tb-right">
+        <span id="fileName" class="muted"></span>
+        <button class="btn" id="btnPalette" title="Command palette (F2)">⌘ Commands</button>
+      </div>
+    </header>
+    <section id="page"></section>
+  </main>
+</div>
+<div id="toasts" aria-live="polite"></div>
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

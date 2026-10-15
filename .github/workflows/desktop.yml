@@ -1,0 +1,89 @@
+# Tests on every push. Builds the desktop app on each OS (PyInstaller can't cross-compile) for version tags
+# (v1.0.0) or a manual run from the Actions tab; a tag also publishes a GitHub Release with the installers.
+name: Desktop builds
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: for t in tests/test_*.py; do python "$t" || exit 1; done
+
+  build:
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-15-intel, windows-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Linux runtime libraries for Qt WebEngine
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 \
+            libxcb-shape0 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libnss3 libxcomposite1 libxdamage1 \
+            libxrandr2 libxtst6 libasound2 libfuse2
+      - name: Install build tools
+        run: |
+          pip install pyinstaller pillow pywebview
+          if [ "$RUNNER_OS" = Linux ]; then pip install "pywebview[qt]"; fi
+      - name: Tests
+        run: for t in tests/test_*.py; do python "$t" || exit 1; done
+      - name: Build
+        run: pyinstaller --noconfirm packaging/dzinde.spec
+      - name: Package (macOS .dmg)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p build/dmg && cp -R dist/Dzinde.app build/dmg/ && ln -s /Applications build/dmg/Applications
+          hdiutil create -volname Dzinde -srcfolder build/dmg -ov -format UDZO "dist/Dzinde-macOS-$(uname -m).dmg"
+      - name: Package (Windows installer)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $v = python -c "import dzinde; print(dzinde.__version__)"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DVersion=$v" packaging\windows.iss
+      - name: Package (Linux AppImage)
+        if: runner.os == 'Linux'
+        run: packaging/linux/appimage.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dzinde-${{ matrix.os }}
+          path: |
+            dist/*.dmg
+            dist/*-setup.exe
+            dist/*.AppImage
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" --title "Dzinde $GITHUB_REF_NAME" --generate-notes

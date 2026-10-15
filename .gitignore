@@ -1,0 +1,8 @@
+# third-party installers (RootsMagic/Gramps DMGs are copyrighted and huge)
+*.dmg
+dist/
+build/
+__pycache__/
+*.pyc
+.DS_Store
+.playwright-mcp/
